@@ -1,0 +1,50 @@
+#include <SoftwareSerial.h>
+
+// HC-12 TX pin to Arduino pin 10, HC-12 RX pin to Arduino pin 11
+SoftwareSerial HC12(10, 11); // RX, TX
+
+const int btnForward = 2;
+const int btnBackward = 3;
+const int btnLeft = 4;
+const int btnRight = 5;
+const int btnStop = 6;
+
+void setup() {
+  pinMode(btnForward, INPUT_PULLUP);
+  pinMode(btnBackward, INPUT_PULLUP);
+  pinMode(btnLeft, INPUT_PULLUP);
+  pinMode(btnRight, INPUT_PULLUP);
+  pinMode(btnStop, INPUT_PULLUP);
+
+  Serial.begin(9600);    // For debugging
+  HC12.begin(9600);      // HC-12 module
+  Serial.println("Transmitter ready");
+}
+
+void loop() {
+  if (digitalRead(btnForward) == LOW) {
+    HC12.println("*100#");  // Move forward
+    Serial.println("Sent: *100#");
+    delay(300);
+  }
+  else if (digitalRead(btnBackward) == LOW) {
+    HC12.println("*500#");  // Move backward
+    Serial.println("Sent: *500#");
+    delay(300);
+  }
+  else if (digitalRead(btnLeft) == LOW) {
+    HC12.println("*700#");  // Move left
+    Serial.println("Sent: *700#");
+    delay(300);
+  }
+  else if (digitalRead(btnRight) == LOW) {
+    HC12.println("*300#");  // Move right
+    Serial.println("Sent: *300#");
+    delay(300);
+  }
+  else if (digitalRead(btnStop) == LOW) {
+    HC12.println("*000#");  // Stop
+    Serial.println("Sent: *000#");
+    delay(300);
+  }
+}

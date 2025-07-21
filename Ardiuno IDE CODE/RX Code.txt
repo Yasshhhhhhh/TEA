@@ -1,0 +1,344 @@
+ #include <Wire.h> 
+#include <Servo.h>
+
+Servo myservo = Servo();
+
+const int servoPin = 13;
+#include <LiquidCrystal_I2C.h>
+// Set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+int Set_HC_12=25;
+
+int Motor_FR_1=2;
+int Motor_FR_2=15;
+
+int Motor_FL_1=4;
+int Motor_FL_2=0;
+
+int Motor_BR_1=14;
+int Motor_BR_2=12;
+
+int Motor_BL_1=26;
+int Motor_BL_2=27;
+
+
+
+String inputData = "";        
+bool Data_Received = false;
+String SM_ARU="";
+int System_Connect_Error=0;
+int System_Connect=0;
+
+int Car_Run_Mode=0;
+int Car_Run_Mode2=0;
+int Servo_Run_Mode=0;
+int Servo_run=0;
+
+long i=0;
+void setup()
+{  
+  Serial.begin(9600);
+  Serial2.begin(9600);
+  
+pinMode(Motor_FL_1, OUTPUT);
+pinMode(Motor_FL_2, OUTPUT);
+
+digitalWrite(Motor_FL_1, 0);
+digitalWrite(Motor_FL_2, 0);
+
+
+pinMode(Motor_FR_1, OUTPUT);
+pinMode(Motor_FR_2, OUTPUT);
+
+digitalWrite(Motor_FR_1, 0);
+digitalWrite(Motor_FR_2, 0);
+
+
+pinMode(Motor_BL_1, OUTPUT);
+pinMode(Motor_BL_2, OUTPUT);
+
+digitalWrite(Motor_BL_1, 0);
+digitalWrite(Motor_BL_2, 0);
+
+
+pinMode(Motor_BR_1, OUTPUT);
+pinMode(Motor_BR_2, OUTPUT);
+
+digitalWrite(Motor_BR_1, 0);
+digitalWrite(Motor_BR_2, 0);
+
+   Serial.println("System Connect");
+  init_HC12();  
+  Car_Stop();
+  	lcd.begin();
+
+	// Turn on the blacklight and print a message.
+	lcd.backlight();
+  lcd.setCursor(0, 0);
+	lcd.print("Smart Remote");
+  lcd.setCursor(0, 1);
+	lcd.print("");
+
+  
+
+  //myservo.attach(servoPin); 
+ //     myservo.write(0); 
+
+//  while(1)
+//  {
+// myservo.write(servoPin, 0);        // set the servo position (degrees)
+//    delay(2000);
+//  
+//     myservo.write(servoPin, 90);        // set the servo position (degrees)
+//    delay(2000);
+//  
+//     myservo.write(servoPin, 160);        // set the servo position (degrees)
+//    delay(2000);
+//  }
+
+}
+
+
+void loop() 
+{ 
+    if(Servo_Run_Mode==1 && Servo_run==0)
+    {
+    myservo.write(servoPin, 120);  //180
+      Servo_run=1;
+      //delay(1000);
+    }
+    if(Servo_Run_Mode==2)
+    {
+    myservo.write(servoPin, 0); 
+       Servo_run=1;
+      //delay(1000);   
+    }  
+    
+
+   Read_Response();
+   if(System_Connect==1)
+   {
+    
+     // Serial.println("System Connect");
+      System_Connect_Error=0;
+      
+
+   }
+   else
+   {
+    System_Connect_Error++;
+   //   Serial.print("System_Connect_Error ");
+    //  Serial.println(System_Connect_Error);
+      
+   }
+
+   if(Car_Run_Mode==0)Car_Stop();
+   else if(Car_Run_Mode==1)Car_F();
+   else if(Car_Run_Mode==2)Car_FR();
+   else if(Car_Run_Mode==3)Car_R();
+   else if(Car_Run_Mode==4)Car_BR();
+   else if(Car_Run_Mode==5)Car_B();
+   else if(Car_Run_Mode==6)Car_BL();
+   else if(Car_Run_Mode==7)Car_L();
+   else if(Car_Run_Mode==8)Car_FL();
+
+   if(Car_Run_Mode2==1)Car_1();
+   if(Car_Run_Mode2==2)Car_2();
+
+   
+}
+
+
+
+
+void init_HC12()
+{
+  pinMode(Set_HC_12,OUTPUT);
+  digitalWrite(Set_HC_12,LOW);
+  Serial2.print(F("AT+C001")); 
+  delay(500);
+  digitalWrite(Set_HC_12,HIGH);
+}
+
+
+void Read_Response()
+{
+  int Response=0;
+  long Time_Out=0;
+  //Serial.println("Read Response");
+  Data_Received = false;
+   while(Response==0)
+  {
+   while (Serial2.available())
+    {
+      char inChar = (char)Serial2.read();
+      SM_ARU += inChar;
+      if (inChar == '\n') {
+        Data_Received = true;
+      }
+    }
+//    while (Serial.available())
+//    {
+//      char inChar = (char)Serial.read();
+//      SM_ARU += inChar;
+//      if (inChar == '\n') {
+//        Data_Received = true;
+//      }
+//    }
+    if (Data_Received) 
+    {  
+       // Serial.print("Data ");
+       // Serial.println(SM_ARU);
+       //*123#
+        if(SM_ARU[0]=='*' && SM_ARU[4]=='#')
+        {  
+          Response=1;
+          System_Connect=1;
+
+ //          Serial.print(SM_ARU);
+//          if(SM_ARU[1]=='0' && SM_ARU[2]=='0'&& SM_ARU[3]=='0'&& SM_ARU[4]=='0'){Stop=1;Forward=0;Backward=0;Left=0;Right=0;}
+//           if(SM_ARU[1]=='1' && SM_ARU[2]=='0'){Forward=1;Backward=0;}
+//           if(SM_ARU[1]=='0' && SM_ARU[2]=='1'){Forward=0;Backward=1;}
+//           if(SM_ARU[1]=='0' && SM_ARU[2]=='0'){Forward=0;Backward=0;}
+//           if(SM_ARU[3]=='1'&& SM_ARU[4]=='0'){Left=1;Right=0;}
+//           if(SM_ARU[3]=='0'&& SM_ARU[4]=='1'){Left=0;Right=1;}
+//           if(SM_ARU[3]=='0'&& SM_ARU[4]=='0'){Left=0;Right=0;}
+//          Motor_update();
+//          Serial.println("Received Data");
+//          delay(100);
+          Serial.print("*");
+          Serial.print(SM_ARU[1]);
+          Car_Run_Mode=(SM_ARU[1])-0x30;
+          Serial.print(SM_ARU[2]);
+          Serial.print(SM_ARU[3]);
+          Serial.println("#");
+          
+        lcd.setCursor(0, 1);
+        lcd.print("Data: ");
+        lcd.print(SM_ARU[0]);
+        lcd.print(SM_ARU[1]);
+        lcd.print(SM_ARU[2]);
+        lcd.print(SM_ARU[3]);
+        lcd.print(SM_ARU[4]);
+          Servo_Run_Mode=SM_ARU[3]-0x30;
+          if(Servo_Run_Mode==0)Servo_run=0;
+
+  
+          Car_Run_Mode2=(SM_ARU[2])-0x30;
+          if(Car_Run_Mode>0)Car_Run_Mode2=0;
+
+        }
+        SM_ARU = "";  
+        //Response=1;
+    }
+    Time_Out++;
+    //delay(1);
+    if(Time_Out>50000)
+    {
+      Response=1;
+      System_Connect=0;
+    //  Serial.println("Time Out");
+    }
+    
+  
+  }
+  
+}
+
+void Car_1()
+{
+  digitalWrite(Motor_FL_1, 1);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 1);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+void Car_2()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 1);
+  digitalWrite(Motor_FL_2, 1);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+void Car_Stop()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+
+
+void Car_F()
+{
+  digitalWrite(Motor_FL_1, 1);    digitalWrite(Motor_FR_1, 1);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 1);    digitalWrite(Motor_BR_1, 1);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+
+
+void Car_B()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 1);    digitalWrite(Motor_FR_2, 1);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 1);    digitalWrite(Motor_BR_2, 1);
+}
+
+void Car_R()
+{
+  digitalWrite(Motor_FL_1, 1);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 1);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 1);
+  digitalWrite(Motor_BL_2, 1);    digitalWrite(Motor_BR_2, 0);
+}
+
+void Car_L()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 1);
+  digitalWrite(Motor_FL_2, 1);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 1);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 1);
+}
+
+void Car_FR()
+{
+  digitalWrite(Motor_FL_1, 1);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 1);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+
+void Car_FL()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 1);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 1);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 0);
+}
+
+void Car_BR()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 0);    digitalWrite(Motor_FR_2, 1);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 1);    digitalWrite(Motor_BR_2, 0);
+}
+void Car_BL()
+{
+  digitalWrite(Motor_FL_1, 0);    digitalWrite(Motor_FR_1, 0);
+  digitalWrite(Motor_FL_2, 1);    digitalWrite(Motor_FR_2, 0);
+
+  digitalWrite(Motor_BL_1, 0);    digitalWrite(Motor_BR_1, 0);
+  digitalWrite(Motor_BL_2, 0);    digitalWrite(Motor_BR_2, 1);
+}
